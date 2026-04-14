@@ -1,0 +1,23 @@
+# Binaries and test output
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# Environment and secrets
+.env
+*.env
+.env.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

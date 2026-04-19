@@ -64,7 +64,6 @@ eliminates unnecessary extra API calls.
 
 ## v1.2.0 — Read-only Resources ✅ (released 2026-04-19)
 
-
 Low-effort additions that complete the read surface of the API.
 
 **Endpoints**

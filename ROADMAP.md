@@ -62,16 +62,16 @@ eliminates unnecessary extra API calls.
 
 ---
 
-## v1.2.0 — Read-only Resources 🚧 (started 2026-04-18)
+## v1.2.0 — Read-only Resources ✅ (released 2026-04-19)
 
 Low-effort additions that complete the read surface of the API.
 
 **Endpoints**
-- 🚧 `GET /merchant` — merchant account information
-- 🚧 `GET /employees` — paginated employee list
-- 🚧 `GET /employees/:id` — single employee
-- 🚧 `GET /payment_types` — list payment types
-- 🚧 `GET /payment_types/:id` — single payment type
+- ✅ `GET /merchant` — merchant account information
+- ✅ `GET /employees` — paginated employee list
+- ✅ `GET /employees/:id` — single employee
+- ✅ `GET /payment_types` — list payment types
+- ✅ `GET /payment_types/:id` — single payment type
 
 ---
 

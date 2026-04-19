@@ -120,6 +120,11 @@ func (c *Client) post(ctx context.Context, path string, body, v any) error {
 	return c.do(ctx, http.MethodPost, path, nil, bytes.NewReader(b), v)
 }
 
+// delete executes a DELETE request, discarding any response body.
+func (c *Client) delete(ctx context.Context, path string) error {
+	return c.do(ctx, http.MethodDelete, path, nil, nil, nil)
+}
+
 // do is the core HTTP dispatch method used by all endpoint helpers.
 func (c *Client) do(ctx context.Context, method, path string, params url.Values, body io.Reader, v any) error {
 	fullURL := c.baseURL + path

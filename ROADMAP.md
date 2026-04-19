@@ -75,17 +75,17 @@ Low-effort additions that complete the read surface of the API.
 
 ---
 
-## v1.3.0 — Categories and Customers Write Operations
+## v1.3.0 — Categories and Customers Write Operations 🚧 (started 2026-04-19)
 
 Extend the two most commonly mutated resources beyond read-only.
 
 **Endpoints**
-- `POST /categories` — create or update a category
-- `DELETE /categories/:id` — delete a category
-- `GET /customers` — paginated customer list
-- `GET /customers/:id` — single customer
-- `POST /customers` — create or update a customer
-- `DELETE /customers/:id` — delete a customer
+- ✅ `POST /categories` — create or update a category
+- ✅ `DELETE /categories/:id` — delete a category
+- ✅ `GET /customers` — paginated customer list
+- ✅ `GET /customers/:id` — single customer
+- ✅ `POST /customers` — create or update a customer
+- ✅ `DELETE /customers/:id` — delete a customer
 
 ---
 

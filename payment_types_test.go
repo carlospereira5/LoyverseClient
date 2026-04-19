@@ -44,7 +44,7 @@ func TestListPaymentTypes_populated(t *testing.T) {
 	if len(got) != 1 {
 		t.Fatalf("ListPaymentTypes() returned %d payment types, want 1", len(got))
 	}
-	if diff := cmp.Diff(pt, *got[0]); diff != "" {
+	if diff := cmp.Diff(pt, got[0]); diff != "" {
 		t.Errorf("ListPaymentTypes()[0] mismatch (-want +got):\n%s", diff)
 	}
 }

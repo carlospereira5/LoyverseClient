@@ -118,11 +118,11 @@ func merchantFixture() loyverse.Merchant {
 	}
 }
 
-func customerFixture() *loyverse.Customer {
+func customerFixture() loyverse.Customer {
 	ts := time.Date(2025, 3, 1, 10, 0, 0, 0, time.UTC)
 	fv := time.Date(2025, 3, 5, 0, 0, 0, 0, time.UTC)
 	lv := time.Date(2025, 4, 10, 0, 0, 0, 0, time.UTC)
-	return &loyverse.Customer{
+	return loyverse.Customer{
 		ID:           "cust-1",
 		Name:         "Alice Wonderland",
 		Email:        "alice@example.com",

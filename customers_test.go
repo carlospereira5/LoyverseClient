@@ -32,7 +32,7 @@ func TestListCustomers_singlePage(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /customers", func(w http.ResponseWriter, r *http.Request) {
 		mustWriteJSON(t, w, map[string]any{
-			"customers": []*loyverse.Customer{cust},
+			"customers": []loyverse.Customer{cust},
 			"cursor":    "",
 		})
 	})
@@ -52,18 +52,18 @@ func TestListCustomers_singlePage(t *testing.T) {
 
 func TestListCustomers_multiPage(t *testing.T) {
 	cust1 := customerFixture()
-	cust2 := &loyverse.Customer{ID: "cust-2", Name: "Bob Builder"}
+	cust2 := loyverse.Customer{ID: "cust-2", Name: "Bob Builder"}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /customers", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("cursor") == "" {
 			mustWriteJSON(t, w, map[string]any{
-				"customers": []*loyverse.Customer{cust1},
+				"customers": []loyverse.Customer{cust1},
 				"cursor":    "page-2",
 			})
 		} else {
 			mustWriteJSON(t, w, map[string]any{
-				"customers": []*loyverse.Customer{cust2},
+				"customers": []loyverse.Customer{cust2},
 				"cursor":    "",
 			})
 		}
@@ -111,7 +111,7 @@ func TestGetCustomer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetCustomer() error = %v", err)
 	}
-	if diff := cmp.Diff(cust, got); diff != "" {
+	if diff := cmp.Diff(cust, *got); diff != "" {
 		t.Errorf("GetCustomer() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -151,7 +151,7 @@ func TestCreateOrUpdateCustomer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateOrUpdateCustomer() error = %v", err)
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff := cmp.Diff(want, *got); diff != "" {
 		t.Errorf("CreateOrUpdateCustomer() mismatch (-want +got):\n%s", diff)
 	}
 }

@@ -7,8 +7,8 @@ import (
 )
 
 // ListCustomers returns all customers, automatically following pagination cursors.
-func (c *Client) ListCustomers(ctx context.Context) ([]*Customer, error) {
-	return paginate(func(cursor string) ([]*Customer, string, error) {
+func (c *Client) ListCustomers(ctx context.Context) ([]Customer, error) {
+	return paginate(func(cursor string) ([]Customer, string, error) {
 		params := url.Values{"limit": {_pageLimit}}
 		if cursor != "" {
 			params.Set("cursor", cursor)

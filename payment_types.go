@@ -7,17 +7,12 @@ import (
 
 // ListPaymentTypes returns all payment types for the merchant account.
 // The /payment_types endpoint is not cursor-paginated; all results are returned in a single response.
-func (c *Client) ListPaymentTypes(ctx context.Context) ([]*PaymentType, error) {
+func (c *Client) ListPaymentTypes(ctx context.Context) ([]PaymentType, error) {
 	var resp paymentTypesResponse
 	if err := c.get(ctx, "/payment_types", nil, &resp); err != nil {
 		return nil, fmt.Errorf("loyverse: list payment types: %w", err)
 	}
-	ptrs := make([]*PaymentType, len(resp.PaymentTypes))
-	for i := range resp.PaymentTypes {
-		pt := resp.PaymentTypes[i]
-		ptrs[i] = &pt
-	}
-	return ptrs, nil
+	return resp.PaymentTypes, nil
 }
 
 // GetPaymentType returns a single payment type by its Loyverse ID.

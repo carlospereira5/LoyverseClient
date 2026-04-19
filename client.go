@@ -137,7 +137,9 @@ func (c *Client) do(ctx context.Context, method, path string, params url.Values,
 		return fmt.Errorf("loyverse: build request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
-	req.Header.Set("Content-Type", "application/json")
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	c.logger.DebugContext(ctx, "loyverse: request", "method", method, "url", fullURL)
 
@@ -153,10 +155,6 @@ func (c *Client) do(ctx context.Context, method, path string, params url.Values,
 	}
 
 	if resp.StatusCode >= 400 {
-		c.logger.ErrorContext(ctx, "loyverse: API error",
-			"status", resp.StatusCode,
-			"url", fullURL,
-		)
 		return &APIError{StatusCode: resp.StatusCode, Body: string(respBytes)}
 	}
 

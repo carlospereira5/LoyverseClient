@@ -72,13 +72,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.logger.Error("loyverse webhook: read request body", "err", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	if h.secret != "" {
 		sig := r.Header.Get("X-Loyverse-Signature")
@@ -116,7 +116,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // verifySignature returns true if HMAC-SHA256 of body under h.secret matches signature.
 func (h *Handler) verifySignature(body []byte, signature string) bool {
 	mac := hmac.New(sha256.New, []byte(h.secret))
-	mac.Write(body)
+	_, _ = mac.Write(body) // hash.Hash.Write never returns a non-nil error
 	expected := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	return hmac.Equal([]byte(signature), []byte(expected))
 }

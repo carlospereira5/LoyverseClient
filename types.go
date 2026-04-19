@@ -239,13 +239,6 @@ type PaymentType struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
-// --- internal response envelopes (not exported) ---
-
-type itemsResponse struct {
-	Items  []Item `json:"items"`
-	Cursor string `json:"cursor"`
-}
-
 // Customer represents a customer in a Loyverse merchant account.
 type Customer struct {
 	ID           string     `json:"id"`
@@ -282,6 +275,13 @@ type CustomerRequest struct {
 	CountryCode  string `json:"country_code,omitempty"`
 	CustomerCode string `json:"customer_code,omitempty"`
 	Note         string `json:"note,omitempty"`
+}
+
+// --- internal response envelopes (not exported) ---
+
+type itemsResponse struct {
+	Items  []Item `json:"items"`
+	Cursor string `json:"cursor"`
 }
 
 type receiptsResponse struct {
@@ -323,6 +323,6 @@ type paymentTypesResponse struct {
 }
 
 type customersResponse struct {
-	Customers []*Customer `json:"customers"`
-	Cursor    string      `json:"cursor"`
+	Customers []Customer `json:"customers"`
+	Cursor    string     `json:"cursor"`
 }

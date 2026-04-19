@@ -45,7 +45,7 @@ func TestListEmployees_singlePage(t *testing.T) {
 	if len(got) != 1 {
 		t.Fatalf("ListEmployees() returned %d employees, want 1", len(got))
 	}
-	if diff := cmp.Diff(emp, *got[0]); diff != "" {
+	if diff := cmp.Diff(emp, got[0]); diff != "" {
 		t.Errorf("ListEmployees()[0] mismatch (-want +got):\n%s", diff)
 	}
 }

@@ -97,18 +97,70 @@ type Receipt struct {
 	// Loyverse uses ReceiptDate in its Back Office reports.
 	ReceiptDate time.Time `json:"receipt_date"`
 	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 	// CancelledAt is nil for non-cancelled receipts.
 	CancelledAt *time.Time `json:"cancelled_at"`
-	LineItems   []LineItem `json:"line_items"`
+
+	// Optional context fields.
+	Note        string `json:"note,omitempty"`
+	// RefundFor holds the receipt number of the original sale for REFUND receipts.
+	RefundFor   string `json:"refund_for,omitempty"`
+	Order       string `json:"order,omitempty"`
+	Source      string `json:"source,omitempty"`
+	EmployeeID  string `json:"employee_id,omitempty"`
+	CustomerID  string `json:"customer_id,omitempty"`
+	StoreID     string `json:"store_id,omitempty"`
+	POSDeviceID string `json:"pos_device_id,omitempty"`
+
+	// Financial totals.
+	TotalTax      float64 `json:"total_tax,omitempty"`
+	TotalDiscount float64 `json:"total_discount,omitempty"`
+	Tip           float64 `json:"tip,omitempty"`
+	Surcharge     float64 `json:"surcharge,omitempty"`
+
+	// Collections.
+	LineItems []LineItem       `json:"line_items"`
+	Payments  []ReceiptPayment `json:"payments,omitempty"`
 }
 
 // LineItem represents a single product line within a Receipt.
 type LineItem struct {
-	ItemID    string  `json:"item_id"`
-	ItemName  string  `json:"item_name"`
-	VariantID string  `json:"variant_id"`
-	Quantity  float64 `json:"quantity"`
-	Price     float64 `json:"price"`
+	// ID is the line item's identifier within the receipt; used to reference it in refunds.
+	ID          string  `json:"id,omitempty"`
+	ItemID      string  `json:"item_id"`
+	ItemName    string  `json:"item_name"`
+	VariantID   string  `json:"variant_id"`
+	VariantName string  `json:"variant_name,omitempty"`
+	SKU         string  `json:"sku,omitempty"`
+	Quantity    float64 `json:"quantity"`
+	Price       float64 `json:"price"`
+
+	// Calculated totals.
+	GrossTotalMoney float64 `json:"gross_total_money,omitempty"`
+	TotalMoney      float64 `json:"total_money,omitempty"`
+	Cost            float64 `json:"cost,omitempty"`
+	CostTotal       float64 `json:"cost_total,omitempty"`
+	TotalDiscount   float64 `json:"total_discount,omitempty"`
+	LineNote        string  `json:"line_note,omitempty"`
+}
+
+// ReceiptPayment represents a payment applied to a receipt.
+type ReceiptPayment struct {
+	PaymentTypeID  string          `json:"payment_type_id,omitempty"`
+	MoneyAmount    float64         `json:"money_amount"`
+	Name           string          `json:"name,omitempty"`
+	Type           string          `json:"type,omitempty"`
+	PaidAt         *time.Time      `json:"paid_at,omitempty"`
+	PaymentDetails *PaymentDetails `json:"payment_details,omitempty"`
+}
+
+// PaymentDetails holds card-specific information for a ReceiptPayment.
+type PaymentDetails struct {
+	AuthorizationCode string `json:"authorization_code,omitempty"`
+	ReferenceID       string `json:"reference_id,omitempty"`
+	EntryMethod       string `json:"entry_method,omitempty"`
+	CardCompany       string `json:"card_company,omitempty"`
+	CardNumber        string `json:"card_number,omitempty"`
 }
 
 // ShiftTax holds the money collected for a single tax during a shift.

@@ -9,6 +9,37 @@ import (
 	"github.com/carlospereira5/loyverse"
 )
 
+func TestGetReceipt(t *testing.T) {
+	receipt := receiptFixture()
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /receipts/{number}", func(w http.ResponseWriter, r *http.Request) {
+		mustWriteJSON(t, w, receipt)
+	})
+	c := newTestClient(t, mux)
+
+	got, err := c.GetReceipt(context.Background(), receipt.ReceiptNumber)
+	if err != nil {
+		t.Fatalf("GetReceipt() error = %v", err)
+	}
+	if got.ReceiptNumber != receipt.ReceiptNumber {
+		t.Errorf("GetReceipt().ReceiptNumber = %q, want %q", got.ReceiptNumber, receipt.ReceiptNumber)
+	}
+}
+
+func TestGetReceipt_apiError(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /receipts/{number}", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		mustWriteJSON(t, w, map[string]any{"errors": []any{}})
+	})
+	c := newTestClient(t, mux)
+
+	_, err := c.GetReceipt(context.Background(), "R-NOTFOUND")
+	if err == nil {
+		t.Fatal("GetReceipt() expected error, got nil")
+	}
+}
+
 func TestListReceipts(t *testing.T) {
 	receipt := receiptFixture()
 	mux := http.NewServeMux()

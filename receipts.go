@@ -2,9 +2,19 @@ package loyverse
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"time"
 )
+
+// GetReceipt returns a single receipt by its receipt number.
+func (c *Client) GetReceipt(ctx context.Context, number string) (*Receipt, error) {
+	var r Receipt
+	if err := c.get(ctx, "/receipts/"+number, nil, &r); err != nil {
+		return nil, fmt.Errorf("loyverse: get receipt %s: %w", number, err)
+	}
+	return &r, nil
+}
 
 // ListReceipts returns all receipts with created_at between since and until (inclusive),
 // automatically following pagination cursors.

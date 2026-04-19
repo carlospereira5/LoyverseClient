@@ -16,6 +16,15 @@ func (c *Client) GetReceipt(ctx context.Context, number string) (*Receipt, error
 	return &r, nil
 }
 
+// CreateReceipt records a new sale receipt via POST /receipts.
+func (c *Client) CreateReceipt(ctx context.Context, req CreateReceiptRequest) (*Receipt, error) {
+	var r Receipt
+	if err := c.post(ctx, "/receipts", req, &r); err != nil {
+		return nil, fmt.Errorf("loyverse: create receipt: %w", err)
+	}
+	return &r, nil
+}
+
 // ListReceipts returns all receipts with created_at between since and until (inclusive),
 // automatically following pagination cursors.
 //

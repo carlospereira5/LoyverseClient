@@ -313,6 +313,46 @@ type Customer struct {
 	UpdatedAt    time.Time  `json:"updated_at"`
 }
 
+// CreateReceiptRequest is the payload for POST /receipts.
+type CreateReceiptRequest struct {
+	StoreID     string                  `json:"store_id"`
+	EmployeeID  string                  `json:"employee_id,omitempty"`
+	CustomerID  string                  `json:"customer_id,omitempty"`
+	Source      string                  `json:"source,omitempty"`
+	Order       string                  `json:"order,omitempty"`
+	ReceiptDate *time.Time              `json:"receipt_date,omitempty"`
+	Note        string                  `json:"note,omitempty"`
+	LineItems   []CreateReceiptLineItem `json:"line_items"`
+	Payments    []ReceiptPayment        `json:"payments,omitempty"`
+}
+
+// CreateReceiptLineItem is a line item within a [CreateReceiptRequest].
+type CreateReceiptLineItem struct {
+	VariantID     string                `json:"variant_id"`
+	Quantity      float64               `json:"quantity"`
+	Price         float64               `json:"price,omitempty"`
+	Cost          float64               `json:"cost,omitempty"`
+	LineNote      string                `json:"line_note,omitempty"`
+	LineTaxes     []LineItemTaxRef      `json:"line_taxes,omitempty"`
+	LineDiscounts []LineItemDiscountRef  `json:"line_discounts,omitempty"`
+	LineModifiers []LineItemModifierRef  `json:"line_modifiers,omitempty"`
+}
+
+// LineItemTaxRef references a tax to apply to a CreateReceiptLineItem.
+type LineItemTaxRef struct {
+	ID string `json:"id"`
+}
+
+// LineItemDiscountRef references a discount to apply to a CreateReceiptLineItem.
+type LineItemDiscountRef struct {
+	ID string `json:"id"`
+}
+
+// LineItemModifierRef references a modifier option to apply to a CreateReceiptLineItem.
+type LineItemModifierRef struct {
+	ModifierOptionID string `json:"modifier_option_id"`
+}
+
 // CustomerRequest is the body for POST /customers (create or update).
 // Set ID to update an existing customer; omit it to create a new one.
 type CustomerRequest struct {

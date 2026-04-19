@@ -40,6 +40,43 @@ func TestGetReceipt_apiError(t *testing.T) {
 	}
 }
 
+func TestCreateReceipt(t *testing.T) {
+	receipt := receiptFixture()
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /receipts", func(w http.ResponseWriter, r *http.Request) {
+		mustWriteJSON(t, w, receipt)
+	})
+	c := newTestClient(t, mux)
+
+	req := loyverse.CreateReceiptRequest{
+		StoreID: "store-1",
+		LineItems: []loyverse.CreateReceiptLineItem{
+			{VariantID: "var-1", Quantity: 2, Price: 50.0},
+		},
+	}
+	got, err := c.CreateReceipt(context.Background(), req)
+	if err != nil {
+		t.Fatalf("CreateReceipt() error = %v", err)
+	}
+	if got.ReceiptNumber != receipt.ReceiptNumber {
+		t.Errorf("CreateReceipt().ReceiptNumber = %q, want %q", got.ReceiptNumber, receipt.ReceiptNumber)
+	}
+}
+
+func TestCreateReceipt_apiError(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /receipts", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		mustWriteJSON(t, w, map[string]any{"errors": []any{}})
+	})
+	c := newTestClient(t, mux)
+
+	_, err := c.CreateReceipt(context.Background(), loyverse.CreateReceiptRequest{StoreID: "store-1"})
+	if err == nil {
+		t.Fatal("CreateReceipt() expected error, got nil")
+	}
+}
+
 func TestListReceipts(t *testing.T) {
 	receipt := receiptFixture()
 	mux := http.NewServeMux()

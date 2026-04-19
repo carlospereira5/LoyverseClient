@@ -16,16 +16,37 @@ type Store struct {
 
 // Item represents a product in the Loyverse catalog.
 type Item struct {
-	ID         string      `json:"id"`
-	Name       string      `json:"item_name"`
-	CategoryID string      `json:"category_id"`
-	TrackStock bool        `json:"track_stock"`
-	Cost       float64     `json:"cost"`
-	Variants   []Variant   `json:"variants"`
-	Stores     []ItemStore `json:"stores"`
-	CreatedAt  time.Time   `json:"created_at"`
-	UpdatedAt  time.Time   `json:"updated_at"`
-	DeletedAt  *time.Time  `json:"deleted_at"`
+	ID                string          `json:"id"`
+	Handle            string          `json:"handle"`
+	Name              string          `json:"item_name"`
+	ReferenceID       string          `json:"reference_id"`
+	CategoryID        string          `json:"category_id"`
+	TrackStock        bool            `json:"track_stock"`
+	SoldByWeight      bool            `json:"sold_by_weight"`
+	IsComposite       bool            `json:"is_composite"`
+	UseProduction     bool            `json:"use_production"`
+	Components        []ItemComponent `json:"components"`
+	PrimarySupplierID string          `json:"primary_supplier_id"`
+	TaxIDs            []string        `json:"tax_ids"`
+	ModifiersIDs      []string        `json:"modifiers_ids"`
+	Form              string          `json:"form"`
+	Color             string          `json:"color"`
+	ImageURL          string          `json:"image_url"`
+	Option1Name       string          `json:"option1_name"`
+	Option2Name       string          `json:"option2_name"`
+	Option3Name       string          `json:"option3_name"`
+	Cost              float64         `json:"cost"`
+	Variants          []Variant       `json:"variants"`
+	Stores            []ItemStore     `json:"stores"`
+	CreatedAt         time.Time       `json:"created_at"`
+	UpdatedAt         time.Time       `json:"updated_at"`
+	DeletedAt         *time.Time      `json:"deleted_at"`
+}
+
+// ItemComponent represents a component variant within a composite Item.
+type ItemComponent struct {
+	VariantID string  `json:"variant_id"`
+	Quantity  float64 `json:"quantity"`
 }
 
 // Variant represents a product variant within an Item.
@@ -71,9 +92,11 @@ type ItemStore struct {
 
 // Category represents a product category.
 type Category struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Color string `json:"color"`
+	ID        string     `json:"id"`
+	Name      string     `json:"name"`
+	Color     string     `json:"color"`
+	CreatedAt time.Time  `json:"created_at"`
+	DeletedAt *time.Time `json:"deleted_at"`
 }
 
 // CategoryRequest is the body for POST /categories (create or update).
@@ -102,15 +125,16 @@ type Receipt struct {
 	CancelledAt *time.Time `json:"cancelled_at"`
 
 	// Optional context fields.
-	Note        string `json:"note,omitempty"`
+	Note string `json:"note,omitempty"`
 	// RefundFor holds the receipt number of the original sale for REFUND receipts.
-	RefundFor   string `json:"refund_for,omitempty"`
-	Order       string `json:"order,omitempty"`
-	Source      string `json:"source,omitempty"`
-	EmployeeID  string `json:"employee_id,omitempty"`
-	CustomerID  string `json:"customer_id,omitempty"`
-	StoreID     string `json:"store_id,omitempty"`
-	POSDeviceID string `json:"pos_device_id,omitempty"`
+	RefundFor    string `json:"refund_for,omitempty"`
+	Order        string `json:"order,omitempty"`
+	Source       string `json:"source,omitempty"`
+	EmployeeID   string `json:"employee_id,omitempty"`
+	CustomerID   string `json:"customer_id,omitempty"`
+	StoreID      string `json:"store_id,omitempty"`
+	POSDeviceID  string `json:"pos_device_id,omitempty"`
+	DiningOption string `json:"dining_option,omitempty"`
 
 	// Financial totals.
 	TotalTax      float64 `json:"total_tax,omitempty"`
@@ -118,9 +142,36 @@ type Receipt struct {
 	Tip           float64 `json:"tip,omitempty"`
 	Surcharge     float64 `json:"surcharge,omitempty"`
 
+	// Loyalty points.
+	PointsEarned   float64 `json:"points_earned,omitempty"`
+	PointsDeducted float64 `json:"points_deducted,omitempty"`
+	PointsBalance  float64 `json:"points_balance,omitempty"`
+
+	// Tax and discount breakdowns.
+	TotalTaxes     []ReceiptTax      `json:"total_taxes,omitempty"`
+	TotalDiscounts []ReceiptDiscount `json:"total_discounts,omitempty"`
+
 	// Collections.
 	LineItems []LineItem       `json:"line_items"`
 	Payments  []ReceiptPayment `json:"payments,omitempty"`
+}
+
+// ReceiptTax holds a single tax entry within a receipt or receipt line item.
+type ReceiptTax struct {
+	ID          string  `json:"id"`
+	Type        string  `json:"type"`
+	Name        string  `json:"name"`
+	Rate        float64 `json:"rate"`
+	MoneyAmount float64 `json:"money_amount"`
+}
+
+// ReceiptDiscount holds a single discount entry applied at the receipt level.
+type ReceiptDiscount struct {
+	ID          string  `json:"id"`
+	Type        string  `json:"type"`
+	Name        string  `json:"name"`
+	Percentage  float64 `json:"percentage"`
+	MoneyAmount float64 `json:"money_amount"`
 }
 
 // LineItem represents a single product line within a Receipt.
@@ -142,6 +193,29 @@ type LineItem struct {
 	CostTotal       float64 `json:"cost_total,omitempty"`
 	TotalDiscount   float64 `json:"total_discount,omitempty"`
 	LineNote        string  `json:"line_note,omitempty"`
+
+	// Applied taxes, discounts, and modifiers (populated in API responses).
+	LineTaxes     []ReceiptTax   `json:"line_taxes,omitempty"`
+	LineDiscounts []LineDiscount `json:"line_discounts,omitempty"`
+	LineModifiers []LineModifier `json:"line_modifiers,omitempty"`
+}
+
+// LineDiscount holds a discount applied to a receipt line item.
+type LineDiscount struct {
+	ID          string  `json:"id"`
+	Type        string  `json:"type"`
+	Name        string  `json:"name"`
+	MoneyAmount float64 `json:"money_amount"`
+}
+
+// LineModifier holds a modifier applied to a receipt line item.
+type LineModifier struct {
+	ID               string  `json:"id"`
+	ModifierOptionID string  `json:"modifier_option_id"`
+	Name             string  `json:"name"`
+	Option           string  `json:"option"`
+	Price            float64 `json:"price"`
+	MoneyAmount      float64 `json:"money_amount"`
 }
 
 // ReceiptPayment represents a payment applied to a receipt.
@@ -221,9 +295,10 @@ type Shift struct {
 
 // InventoryLevel represents the current stock level of a variant in a specific store.
 type InventoryLevel struct {
-	VariantID string  `json:"variant_id"`
-	StoreID   string  `json:"store_id"`
-	InStock   float64 `json:"in_stock"`
+	VariantID string    `json:"variant_id"`
+	StoreID   string    `json:"store_id"`
+	InStock   float64   `json:"in_stock"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // InventoryUpdate is a single stock adjustment entry used in POST /inventory requests.

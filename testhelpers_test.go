@@ -77,6 +77,20 @@ func categoryFixture() loyverse.Category {
 	}
 }
 
+func employeeFixture() loyverse.Employee {
+	ts := time.Date(2025, 2, 1, 9, 0, 0, 0, time.UTC)
+	return loyverse.Employee{
+		ID:          "emp-1",
+		Name:        "Jane Smith",
+		Email:       "jane@acme.com",
+		PhoneNumber: "+1-555-0200",
+		Stores:      []string{"store-1"},
+		IsOwner:     false,
+		CreatedAt:   ts,
+		UpdatedAt:   ts,
+	}
+}
+
 func merchantFixture() loyverse.Merchant {
 	ts := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	return loyverse.Merchant{

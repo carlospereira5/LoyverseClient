@@ -192,6 +192,45 @@ type CreateVariantRequest struct {
 	SKU          string  `json:"sku,omitempty"`
 }
 
+// Merchant represents the Loyverse merchant account.
+type Merchant struct {
+	ID           string    `json:"id"`
+	Name         string    `json:"name"`
+	Email        string    `json:"email"`
+	CurrencyCode string    `json:"currency_code"`
+	LanguageCode string    `json:"language_code"`
+	CountryCode  string    `json:"country_code"`
+	Address      string    `json:"address"`
+	PhoneNumber  string    `json:"phone_number"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// Employee represents a staff member in a Loyverse merchant account.
+type Employee struct {
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	Email       string     `json:"email,omitempty"`
+	PhoneNumber string     `json:"phone_number,omitempty"`
+	// Stores holds the IDs of stores the employee has access to.
+	Stores    []string   `json:"stores"`
+	IsOwner   bool       `json:"is_owner"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+}
+
+// PaymentType represents a payment method configured in a Loyverse merchant account.
+type PaymentType struct {
+	ID        string     `json:"id"`
+	Name      string     `json:"name"`
+	// Type is "CASH", "CARD", or a custom type string.
+	Type      string     `json:"type"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+}
+
 // --- internal response envelopes (not exported) ---
 
 type itemsResponse struct {
@@ -226,4 +265,13 @@ type storesResponse struct {
 type variantsResponse struct {
 	Variants []Variant `json:"variants"`
 	Cursor   string    `json:"cursor"`
+}
+
+type employeesResponse struct {
+	Employees []Employee `json:"employees"`
+	Cursor    string     `json:"cursor"`
+}
+
+type paymentTypesResponse struct {
+	PaymentTypes []PaymentType `json:"payment_types"`
 }

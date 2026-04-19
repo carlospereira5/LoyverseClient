@@ -77,6 +77,17 @@ func categoryFixture() loyverse.Category {
 	}
 }
 
+func paymentTypeFixture() loyverse.PaymentType {
+	ts := time.Date(2025, 1, 10, 0, 0, 0, 0, time.UTC)
+	return loyverse.PaymentType{
+		ID:        "pt-1",
+		Name:      "Cash",
+		Type:      "CASH",
+		CreatedAt: ts,
+		UpdatedAt: ts,
+	}
+}
+
 func employeeFixture() loyverse.Employee {
 	ts := time.Date(2025, 2, 1, 9, 0, 0, 0, time.UTC)
 	return loyverse.Employee{

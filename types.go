@@ -76,6 +76,14 @@ type Category struct {
 	Color string `json:"color"`
 }
 
+// CategoryRequest is the body for POST /categories (create or update).
+// Set ID to update an existing category; omit it to create a new one.
+type CategoryRequest struct {
+	ID    string `json:"id,omitempty"`
+	Name  string `json:"name"`
+	Color string `json:"color,omitempty"`
+}
+
 // Receipt represents a sale or refund transaction recorded by a POS device.
 type Receipt struct {
 	ReceiptNumber string `json:"receipt_number"`
@@ -238,6 +246,44 @@ type itemsResponse struct {
 	Cursor string `json:"cursor"`
 }
 
+// Customer represents a customer in a Loyverse merchant account.
+type Customer struct {
+	ID           string     `json:"id"`
+	Name         string     `json:"name"`
+	Email        string     `json:"email"`
+	PhoneNumber  string     `json:"phone_number"`
+	Address      string     `json:"address"`
+	City         string     `json:"city"`
+	Region       string     `json:"region"`
+	PostalCode   string     `json:"postal_code"`
+	CountryCode  string     `json:"country_code"`
+	CustomerCode string     `json:"customer_code"`
+	Note         string     `json:"note"`
+	FirstVisit   *time.Time `json:"first_visit"`
+	LastVisit    *time.Time `json:"last_visit"`
+	TotalVisits  int        `json:"total_visits"`
+	TotalSpent   float64    `json:"total_spent"`
+	TotalPoints  float64    `json:"total_points"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
+}
+
+// CustomerRequest is the body for POST /customers (create or update).
+// Set ID to update an existing customer; omit it to create a new one.
+type CustomerRequest struct {
+	ID           string `json:"id,omitempty"`
+	Name         string `json:"name"`
+	Email        string `json:"email,omitempty"`
+	PhoneNumber  string `json:"phone_number,omitempty"`
+	Address      string `json:"address,omitempty"`
+	City         string `json:"city,omitempty"`
+	Region       string `json:"region,omitempty"`
+	PostalCode   string `json:"postal_code,omitempty"`
+	CountryCode  string `json:"country_code,omitempty"`
+	CustomerCode string `json:"customer_code,omitempty"`
+	Note         string `json:"note,omitempty"`
+}
+
 type receiptsResponse struct {
 	Receipts []Receipt `json:"receipts"`
 	Cursor   string    `json:"cursor"`
@@ -274,4 +320,9 @@ type employeesResponse struct {
 
 type paymentTypesResponse struct {
 	PaymentTypes []PaymentType `json:"payment_types"`
+}
+
+type customersResponse struct {
+	Customers []*Customer `json:"customers"`
+	Cursor    string      `json:"cursor"`
 }

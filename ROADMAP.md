@@ -5,7 +5,7 @@ Completed items are marked ✅. Planned items are unmarked.
 
 ---
 
-## v1.0.0 — Core client ✅ (current)
+## v1.0.0 — Core client ✅ (released 2026-04-14)
 
 Foundation: HTTP client, pagination, batch operations, and inbound webhook handler.
 
@@ -41,7 +41,7 @@ Foundation: HTTP client, pagination, batch operations, and inbound webhook handl
 
 ---
 
-## v1.1.0 — Stores and Variants
+## v1.1.0 — Stores and Variants 🚧 (in progress)
 
 `store_id` is required by all inventory write operations but currently resolved as a side effect
 of fetching item data. Exposing stores and standalone variants as first-class resources

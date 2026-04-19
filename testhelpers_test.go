@@ -80,10 +80,43 @@ func categoryFixture() loyverse.Category {
 func shiftFixture() loyverse.Shift {
 	opened := time.Date(2025, 1, 15, 8, 0, 0, 0, time.UTC)
 	closed := time.Date(2025, 1, 15, 20, 0, 0, 0, time.UTC)
+	movementAt := time.Date(2025, 1, 15, 12, 0, 0, 0, time.UTC)
 	return loyverse.Shift{
-		ID:       "shift-1",
-		OpenedAt: opened,
-		ClosedAt: &closed,
-		PaidOut:  500.0,
+		ID:               "shift-1",
+		StoreID:          "store-1",
+		POSDeviceID:      "pos-1",
+		OpenedAt:         opened,
+		ClosedAt:         &closed,
+		OpenedByEmployee: "emp-1",
+		ClosedByEmployee: "emp-2",
+		StartingCash:     200.0,
+		CashPayments:     1500.0,
+		CashRefunds:      50.0,
+		PaidIn:           100.0,
+		PaidOut:          500.0,
+		ExpectedCash:     1250.0,
+		ActualCash:       1240.0,
+		GrossSales:       2000.0,
+		Refunds:          50.0,
+		Discounts:        30.0,
+		NetSales:         1920.0,
+		Tip:              20.0,
+		Surcharge:        5.0,
+		Taxes: []loyverse.ShiftTax{
+			{TaxID: "tax-1", MoneyAmount: 192.0},
+		},
+		Payments: []loyverse.ShiftPayment{
+			{PaymentTypeID: "pt-cash", MoneyAmount: 1500.0},
+			{PaymentTypeID: "pt-card", MoneyAmount: 500.0},
+		},
+		CashMovements: []loyverse.CashMovement{
+			{
+				Type:        "PAID_OUT",
+				MoneyAmount: 500.0,
+				Comment:     "end of day float",
+				EmployeeID:  "emp-1",
+				CreatedAt:   movementAt,
+			},
+		},
 	}
 }

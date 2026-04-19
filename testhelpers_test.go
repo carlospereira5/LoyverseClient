@@ -77,6 +77,22 @@ func categoryFixture() loyverse.Category {
 	}
 }
 
+func merchantFixture() loyverse.Merchant {
+	ts := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	return loyverse.Merchant{
+		ID:           "merchant-1",
+		Name:         "Acme Corp",
+		Email:        "owner@acme.com",
+		CurrencyCode: "USD",
+		LanguageCode: "en",
+		CountryCode:  "US",
+		Address:      "1 Main St",
+		PhoneNumber:  "+1-555-0100",
+		CreatedAt:    ts,
+		UpdatedAt:    ts,
+	}
+}
+
 func shiftFixture() loyverse.Shift {
 	opened := time.Date(2025, 1, 15, 8, 0, 0, 0, time.UTC)
 	closed := time.Date(2025, 1, 15, 20, 0, 0, 0, time.UTC)

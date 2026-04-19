@@ -353,6 +353,23 @@ type LineItemModifierRef struct {
 	ModifierOptionID string `json:"modifier_option_id"`
 }
 
+// RefundRequest is the payload for POST /receipts/:number/refund.
+// Omit LineItems to refund all items on the original receipt.
+type RefundRequest struct {
+	ReceiptDate *time.Time       `json:"receipt_date,omitempty"`
+	Source      string           `json:"source,omitempty"`
+	EmployeeID  string           `json:"employee_id,omitempty"`
+	StoreID     string           `json:"store_id,omitempty"`
+	LineItems   []RefundLineItem `json:"line_items,omitempty"`
+}
+
+// RefundLineItem references a specific line item from the original receipt by its ID.
+// Use LineItem.ID to populate the ID field.
+type RefundLineItem struct {
+	ID       string  `json:"id"`
+	Quantity float64 `json:"quantity"`
+}
+
 // CustomerRequest is the body for POST /customers (create or update).
 // Set ID to update an existing customer; omit it to create a new one.
 type CustomerRequest struct {

@@ -1,7 +1,9 @@
 package loyverse_test
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -74,6 +76,68 @@ func TestCreateReceipt_apiError(t *testing.T) {
 	_, err := c.CreateReceipt(context.Background(), loyverse.CreateReceiptRequest{StoreID: "store-1"})
 	if err == nil {
 		t.Fatal("CreateReceipt() expected error, got nil")
+	}
+}
+
+func TestRefundReceipt(t *testing.T) {
+	refund := receiptFixture()
+	refund.ReceiptType = "REFUND"
+	refund.RefundFor = "R-001"
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /receipts/{number}/refund", func(w http.ResponseWriter, r *http.Request) {
+		mustWriteJSON(t, w, refund)
+	})
+	c := newTestClient(t, mux)
+
+	got, err := c.RefundReceipt(context.Background(), "R-001", loyverse.RefundRequest{})
+	if err != nil {
+		t.Fatalf("RefundReceipt() error = %v", err)
+	}
+	if got.ReceiptType != "REFUND" {
+		t.Errorf("RefundReceipt().ReceiptType = %q, want %q", got.ReceiptType, "REFUND")
+	}
+	if got.RefundFor != "R-001" {
+		t.Errorf("RefundReceipt().RefundFor = %q, want %q", got.RefundFor, "R-001")
+	}
+}
+
+func TestRefundReceipt_partialRefund(t *testing.T) {
+	var gotBody []byte
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /receipts/{number}/refund", func(w http.ResponseWriter, r *http.Request) {
+		gotBody, _ = io.ReadAll(r.Body)
+		refund := receiptFixture()
+		refund.ReceiptType = "REFUND"
+		mustWriteJSON(t, w, refund)
+	})
+	c := newTestClient(t, mux)
+
+	req := loyverse.RefundRequest{
+		LineItems: []loyverse.RefundLineItem{
+			{ID: "li-1", Quantity: 1},
+		},
+	}
+	_, err := c.RefundReceipt(context.Background(), "R-001", req)
+	if err != nil {
+		t.Fatalf("RefundReceipt() error = %v", err)
+	}
+	if !bytes.Contains(gotBody, []byte("li-1")) {
+		t.Errorf("RefundReceipt() did not send line item ID in request body")
+	}
+}
+
+func TestRefundReceipt_apiError(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /receipts/{number}/refund", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		mustWriteJSON(t, w, map[string]any{"errors": []any{}})
+	})
+	c := newTestClient(t, mux)
+
+	_, err := c.RefundReceipt(context.Background(), "R-NOTFOUND", loyverse.RefundRequest{})
+	if err == nil {
+		t.Fatal("RefundReceipt() expected error, got nil")
 	}
 }
 

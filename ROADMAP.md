@@ -89,14 +89,19 @@ Extend the two most commonly mutated resources beyond read-only.
 
 ---
 
-## v1.4.0 — Receipts Write Operations
+## v1.4.0 — Receipts Write Operations ✅ (released 2026-04-19)
 
 Enables programmatic sales recording and refund issuance.
 
 **Endpoints**
-- `GET /receipts/:number` — single receipt by number
-- `POST /receipts` — create a receipt
-- `POST /receipts/:number/refund` — issue a refund against an existing receipt
+- ✅ `GET /receipts/:number` — single receipt by number
+- ✅ `POST /receipts` — create a receipt
+- ✅ `POST /receipts/:number/refund` — issue a refund against an existing receipt
+
+**Also completed in this release**
+- ✅ `Receipt` expanded with full API response fields (UpdatedAt, StoreID, EmployeeID, CustomerID, Tip, Surcharge, TotalTax, TotalDiscount, Payments, etc.)
+- ✅ `LineItem` expanded with ID (for refund references), VariantName, SKU, calculated totals
+- ✅ New types: `ReceiptPayment`, `PaymentDetails`, `CreateReceiptRequest`, `CreateReceiptLineItem`, `RefundRequest`, `RefundLineItem`
 
 ---
 

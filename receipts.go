@@ -25,6 +25,16 @@ func (c *Client) CreateReceipt(ctx context.Context, req CreateReceiptRequest) (*
 	return &r, nil
 }
 
+// RefundReceipt issues a refund against an existing receipt via POST /receipts/:number/refund.
+// Omit req.LineItems to refund all items; populate it for a partial refund.
+func (c *Client) RefundReceipt(ctx context.Context, number string, req RefundRequest) (*Receipt, error) {
+	var r Receipt
+	if err := c.post(ctx, "/receipts/"+number+"/refund", req, &r); err != nil {
+		return nil, fmt.Errorf("loyverse: refund receipt %s: %w", number, err)
+	}
+	return &r, nil
+}
+
 // ListReceipts returns all receipts with created_at between since and until (inclusive),
 // automatically following pagination cursors.
 //

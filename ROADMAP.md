@@ -41,19 +41,24 @@ Foundation: HTTP client, pagination, batch operations, and inbound webhook handl
 
 ---
 
-## v1.1.0 — Stores and Variants 🚧 (in progress)
+## v1.1.0 — Stores and Variants ✅ (released 2026-04-18)
 
 `store_id` is required by all inventory write operations but currently resolved as a side effect
 of fetching item data. Exposing stores and standalone variants as first-class resources
 eliminates unnecessary extra API calls.
 
 **Endpoints**
-- `GET /stores` — list all stores
-- `GET /stores/:id` — single store
-- `GET /variants` — standalone variant list (filter by barcode, SKU, or item ID)
-- `GET /variants/:id` — single variant
+- ✅ `GET /stores` — list all stores
+- ✅ `GET /stores/:id` — single store
+- ✅ `GET /variants` — standalone variant list (filter by barcode, SKU, or item ID)
+- ✅ `GET /variants/:id` — single variant
 
-**New type**: `Store { ID, Name, Address }`
+**New types**: `Store`, `VariantStore`
+
+**Also completed in this release**
+- ✅ `GET /shifts/:id` — single shift
+- ✅ `Shift` struct extended with full financial fields (`StartingCash`, `CashPayments`, `CashRefunds`, `PaidIn`, `ExpectedCash`, `ActualCash`, `GrossSales`, `Refunds`, `Discounts`, `NetSales`, `Tip`, `Surcharge`)
+- ✅ New types: `ShiftPayment`, `ShiftTax`, `CashMovement`
 
 ---
 

@@ -64,6 +64,7 @@ eliminates unnecessary extra API calls.
 
 ## v1.2.0 — Read-only Resources ✅ (released 2026-04-19)
 
+
 Low-effort additions that complete the read surface of the API.
 
 **Endpoints**
@@ -75,7 +76,7 @@ Low-effort additions that complete the read surface of the API.
 
 ---
 
-## v1.3.0 — Categories and Customers Write Operations 🚧 (started 2026-04-19)
+## v1.3.0 — Categories and Customers Write Operations ✅ (released 2026-04-19)
 
 Extend the two most commonly mutated resources beyond read-only.
 

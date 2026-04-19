@@ -2,6 +2,18 @@ package loyverse
 
 import "time"
 
+// Store represents a physical or virtual store location in a Loyverse merchant account.
+type Store struct {
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	Address     string     `json:"address"`
+	PhoneNumber string     `json:"phone_number"`
+	Description string     `json:"description"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	DeletedAt   *time.Time `json:"deleted_at"`
+}
+
 // Item represents a product in the Loyverse catalog.
 type Item struct {
 	ID         string      `json:"id"`
@@ -17,6 +29,7 @@ type Item struct {
 }
 
 // Variant represents a product variant within an Item.
+// When retrieved via the standalone /variants endpoint additional fields are populated.
 type Variant struct {
 	ID           string  `json:"variant_id"`
 	ItemID       string  `json:"item_id"`
@@ -29,6 +42,26 @@ type Variant struct {
 	DefaultPrice float64 `json:"default_price"`
 	// PricingType is "FIXED" or "VARIABLE".
 	PricingType string `json:"default_pricing_type"`
+
+	// Fields populated only by the standalone /variants endpoint.
+	ReferenceVariantID string         `json:"reference_variant_id,omitempty"`
+	Option1Value       string         `json:"option1_value,omitempty"`
+	Option2Value       string         `json:"option2_value,omitempty"`
+	Option3Value       string         `json:"option3_value,omitempty"`
+	Stores             []VariantStore `json:"stores,omitempty"`
+	CreatedAt          time.Time      `json:"created_at,omitempty"`
+	UpdatedAt          time.Time      `json:"updated_at,omitempty"`
+	DeletedAt          *time.Time     `json:"deleted_at,omitempty"`
+}
+
+// VariantStore holds store-specific pricing and availability for a Variant.
+type VariantStore struct {
+	StoreID          string   `json:"store_id"`
+	PricingType      string   `json:"pricing_type"`
+	Price            *float64 `json:"price"`
+	AvailableForSale bool     `json:"available_for_sale"`
+	OptimalStock     *float64 `json:"optimal_stock"`
+	LowStock         *float64 `json:"low_stock"`
 }
 
 // ItemStore holds store-specific data associated with an Item.
@@ -137,4 +170,13 @@ type categoriesResponse struct {
 type inventoryResponse struct {
 	Levels []InventoryLevel `json:"inventory_levels"`
 	Cursor string           `json:"cursor"`
+}
+
+type storesResponse struct {
+	Stores []Store `json:"stores"`
+}
+
+type variantsResponse struct {
+	Variants []Variant `json:"variants"`
+	Cursor   string    `json:"cursor"`
 }

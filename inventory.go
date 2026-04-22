@@ -230,6 +230,49 @@ func (c *Client) ResetCategoryStock(ctx context.Context, categoryID string) (ok,
 	return int(okCount), int(failCount), nil
 }
 
+// ResetAllStock sets the stock level of every tracked inventory record to 0.
+// It fetches all inventory levels once and dispatches up to c.workers concurrent corrections.
+// Returns (successful, failed) counts; per-variant errors are logged but do not abort the operation.
+func (c *Client) ResetAllStock(ctx context.Context) (ok, failed int, err error) {
+	levels, err := c.GetInventoryLevels(ctx)
+	if err != nil {
+		return 0, 0, fmt.Errorf("loyverse: reset all stock: %w", err)
+	}
+	if len(levels) == 0 {
+		return 0, 0, nil
+	}
+
+	jobs := make(chan InventoryLevel, len(levels))
+	for _, l := range levels {
+		jobs <- l
+	}
+	close(jobs)
+
+	var okCount, failCount int64
+	var wg sync.WaitGroup
+
+	for range c.workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for lvl := range jobs {
+				if setErr := c.SetStock(ctx, lvl.VariantID, lvl.StoreID, 0); setErr != nil {
+					c.logger.ErrorContext(ctx, "loyverse: reset all stock failed",
+						"variant_id", lvl.VariantID,
+						"err", setErr,
+					)
+					atomic.AddInt64(&failCount, 1)
+					continue
+				}
+				atomic.AddInt64(&okCount, 1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	return int(okCount), int(failCount), nil
+}
+
 // ResetNegativeStock sets all stock levels below zero back to zero.
 // It fetches all inventory levels once and dispatches up to c.workers concurrent corrections.
 // Returns (successful, failed) counts.

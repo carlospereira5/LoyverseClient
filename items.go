@@ -84,6 +84,51 @@ func (c *Client) UpdateItemName(ctx context.Context, itemID, name string) error 
 	return nil
 }
 
+// UpdateItemNameBatch renames multiple items concurrently.
+// names maps itemID → new display name. Runs up to c.workers concurrent requests.
+// Returns (successful, failed) counts; per-item errors are logged but do not abort the operation.
+func (c *Client) UpdateItemNameBatch(ctx context.Context, names map[string]string) (ok, failed int, err error) {
+	if len(names) == 0 {
+		return 0, 0, nil
+	}
+
+	type job struct {
+		itemID string
+		name   string
+	}
+
+	jobs := make(chan job, len(names))
+	for id, n := range names {
+		jobs <- job{itemID: id, name: n}
+	}
+	close(jobs)
+
+	var okCount, failCount int64
+	var wg sync.WaitGroup
+
+	for range c.workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := range jobs {
+				if renameErr := c.UpdateItemName(ctx, j.itemID, j.name); renameErr != nil {
+					c.logger.ErrorContext(ctx, "loyverse: batch rename failed",
+						"item_id", j.itemID,
+						"name", j.name,
+						"err", renameErr,
+					)
+					atomic.AddInt64(&failCount, 1)
+					continue
+				}
+				atomic.AddInt64(&okCount, 1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	return int(okCount), int(failCount), nil
+}
+
 // ResetCategoryPrices sets the default price of every variant of every item in categoryID to 0.
 // Per-store price overrides are also zeroed. Runs up to c.workers concurrent requests.
 // Returns (successful, failed) counts; per-item errors are logged but do not abort the operation.

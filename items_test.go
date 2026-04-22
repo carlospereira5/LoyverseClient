@@ -253,3 +253,79 @@ func TestResetCategoryPrices_apiError(t *testing.T) {
 		t.Fatal("ResetCategoryPrices() error = nil, want non-nil on API error")
 	}
 }
+
+func TestUpdateItemNameBatch(t *testing.T) {
+	names := map[string]string{
+		"item-1": "Widget A",
+		"item-2": "Widget B",
+	}
+
+	var mu sync.Mutex
+	renamedItems := make(map[string]string)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /items/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		mustWriteJSON(t, w, loyverse.Item{
+			ID:       id,
+			Name:     "Old Name",
+			Variants: []loyverse.Variant{{ID: "var-" + id, ItemID: id}},
+		})
+	})
+	mux.HandleFunc("POST /items", func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Errorf("POST /items: decode body: %v", err)
+		}
+		mu.Lock()
+		renamedItems[body["id"].(string)] = body["item_name"].(string)
+		mu.Unlock()
+		w.WriteHeader(http.StatusOK)
+	})
+	c := newTestClient(t, mux)
+
+	ok, failed, err := c.UpdateItemNameBatch(context.Background(), names)
+	if err != nil {
+		t.Fatalf("UpdateItemNameBatch() error = %v", err)
+	}
+	if failed != 0 {
+		t.Errorf("UpdateItemNameBatch() failed = %d, want 0", failed)
+	}
+	if ok != 2 {
+		t.Errorf("UpdateItemNameBatch() ok = %d, want 2", ok)
+	}
+	for itemID, wantName := range names {
+		if got := renamedItems[itemID]; got != wantName {
+			t.Errorf("UpdateItemNameBatch() %s renamed to %q, want %q", itemID, got, wantName)
+		}
+	}
+}
+
+func TestUpdateItemNameBatch_emptyMap(t *testing.T) {
+	c := newTestClient(t, http.NewServeMux())
+
+	ok, failed, err := c.UpdateItemNameBatch(context.Background(), map[string]string{})
+	if err != nil {
+		t.Fatalf("UpdateItemNameBatch() error = %v, want nil", err)
+	}
+	if ok != 0 || failed != 0 {
+		t.Errorf("UpdateItemNameBatch() = (%d, %d), want (0, 0)", ok, failed)
+	}
+}
+
+func TestUpdateItemNameBatch_apiError(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /items/{id}", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		mustWriteJSON(t, w, map[string]any{"code": "ERR", "message": "server error"})
+	})
+	c := newTestClient(t, mux)
+
+	ok, failed, err := c.UpdateItemNameBatch(context.Background(), map[string]string{"item-1": "New Name"})
+	if err != nil {
+		t.Fatalf("UpdateItemNameBatch() error = %v, want nil (errors counted per item)", err)
+	}
+	if ok != 0 || failed != 1 {
+		t.Errorf("UpdateItemNameBatch() = (%d, %d), want (0, 1)", ok, failed)
+	}
+}

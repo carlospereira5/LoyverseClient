@@ -105,6 +105,16 @@ Enables programmatic sales recording and refund issuance.
 
 ---
 
+## v1.4.1 — Category Batch Operations (released 2026-04-22)
+
+Targeted bulk mutations scoped to a single category.
+
+**Batch operations**
+- ✅ `ResetCategoryPrices` — zero the default price and per-store prices of all items in a given category
+- ✅ `ResetCategoryStock` — zero the stock of all items in a given category
+
+---
+
 ## v1.5.0 — Remaining Resources
 
 Completes full API surface coverage for suppliers, taxes, discounts, modifiers, and POS devices.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sync"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -156,5 +157,99 @@ func TestSetItemCost(t *testing.T) {
 	}
 	if gotCost != wantCost {
 		t.Errorf("SetItemCost() POST body[\"cost\"] = %v, want %v", gotCost, wantCost)
+	}
+}
+
+func TestResetCategoryPrices(t *testing.T) {
+	const catID = "cat-1"
+	itemInCat := loyverse.Item{
+		ID:         "item-1",
+		CategoryID: catID,
+		Variants:   []loyverse.Variant{{ID: "var-1", ItemID: "item-1", DefaultPrice: 9.99, PricingType: "FIXED"}},
+	}
+	itemOutCat := loyverse.Item{
+		ID:         "item-2",
+		CategoryID: "cat-other",
+		Variants:   []loyverse.Variant{{ID: "var-2", ItemID: "item-2"}},
+	}
+
+	var mu sync.Mutex
+	var postedItemIDs []string
+	var postedVariantPrice float64
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /items", func(w http.ResponseWriter, r *http.Request) {
+		mustWriteJSON(t, w, map[string]any{
+			"items":  []loyverse.Item{itemInCat, itemOutCat},
+			"cursor": "",
+		})
+	})
+	mux.HandleFunc("GET /items/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if r.PathValue("id") == itemInCat.ID {
+			mustWriteJSON(t, w, itemInCat)
+		} else {
+			mustWriteJSON(t, w, itemOutCat)
+		}
+	})
+	mux.HandleFunc("POST /items", func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Errorf("POST /items: decode body: %v", err)
+		}
+		variants := body["variants"].([]any)
+		v := variants[0].(map[string]any)
+		mu.Lock()
+		postedItemIDs = append(postedItemIDs, body["id"].(string))
+		postedVariantPrice = v["default_price"].(float64)
+		mu.Unlock()
+		w.WriteHeader(http.StatusOK)
+	})
+	c := newTestClient(t, mux)
+
+	ok, failed, err := c.ResetCategoryPrices(context.Background(), catID)
+	if err != nil {
+		t.Fatalf("ResetCategoryPrices() error = %v", err)
+	}
+	if failed != 0 {
+		t.Errorf("ResetCategoryPrices() failed = %d, want 0", failed)
+	}
+	if ok != 1 {
+		t.Errorf("ResetCategoryPrices() ok = %d, want 1", ok)
+	}
+	if len(postedItemIDs) != 1 || postedItemIDs[0] != itemInCat.ID {
+		t.Errorf("ResetCategoryPrices() updated items = %v, want only [%s]", postedItemIDs, itemInCat.ID)
+	}
+	if postedVariantPrice != 0 {
+		t.Errorf("ResetCategoryPrices() variant default_price = %v, want 0", postedVariantPrice)
+	}
+}
+
+func TestResetCategoryPrices_noCategoryItems(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /items", func(w http.ResponseWriter, r *http.Request) {
+		mustWriteJSON(t, w, map[string]any{"items": []any{}, "cursor": ""})
+	})
+	c := newTestClient(t, mux)
+
+	ok, failed, err := c.ResetCategoryPrices(context.Background(), "cat-empty")
+	if err != nil {
+		t.Fatalf("ResetCategoryPrices() error = %v, want nil", err)
+	}
+	if ok != 0 || failed != 0 {
+		t.Errorf("ResetCategoryPrices() = (%d, %d), want (0, 0)", ok, failed)
+	}
+}
+
+func TestResetCategoryPrices_apiError(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /items", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		mustWriteJSON(t, w, map[string]any{"code": "ERR", "message": "server error"})
+	})
+	c := newTestClient(t, mux)
+
+	_, _, err := c.ResetCategoryPrices(context.Background(), "cat-1")
+	if err == nil {
+		t.Fatal("ResetCategoryPrices() error = nil, want non-nil on API error")
 	}
 }

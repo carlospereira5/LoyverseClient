@@ -161,6 +161,75 @@ func (c *Client) UpdateStockBatch(ctx context.Context, updates map[string]float6
 	return int(okCount), int(failCount), nil
 }
 
+// ResetCategoryStock sets the stock level of every variant of every item in categoryID to 0.
+// It fetches all items once to identify variants in the category, then fetches all inventory
+// levels once to resolve store associations. Runs up to c.workers concurrent requests.
+// Returns (successful, failed) counts; per-variant errors are logged but do not abort the operation.
+func (c *Client) ResetCategoryStock(ctx context.Context, categoryID string) (ok, failed int, err error) {
+	items, err := c.GetItems(ctx)
+	if err != nil {
+		return 0, 0, fmt.Errorf("loyverse: reset category stock %s: fetch items: %w", categoryID, err)
+	}
+
+	variantSet := make(map[string]struct{})
+	for _, item := range items {
+		if item.CategoryID == categoryID {
+			for _, v := range item.Variants {
+				variantSet[v.ID] = struct{}{}
+			}
+		}
+	}
+	if len(variantSet) == 0 {
+		return 0, 0, nil
+	}
+
+	levels, err := c.GetInventoryLevels(ctx)
+	if err != nil {
+		return 0, 0, fmt.Errorf("loyverse: reset category stock %s: fetch inventory: %w", categoryID, err)
+	}
+
+	var targets []InventoryLevel
+	for _, l := range levels {
+		if _, found := variantSet[l.VariantID]; found {
+			targets = append(targets, l)
+		}
+	}
+	if len(targets) == 0 {
+		return 0, 0, nil
+	}
+
+	jobs := make(chan InventoryLevel, len(targets))
+	for _, l := range targets {
+		jobs <- l
+	}
+	close(jobs)
+
+	var okCount, failCount int64
+	var wg sync.WaitGroup
+
+	for range c.workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for lvl := range jobs {
+				if setErr := c.SetStock(ctx, lvl.VariantID, lvl.StoreID, 0); setErr != nil {
+					c.logger.ErrorContext(ctx, "loyverse: reset category stock failed",
+						"variant_id", lvl.VariantID,
+						"category_id", categoryID,
+						"err", setErr,
+					)
+					atomic.AddInt64(&failCount, 1)
+					continue
+				}
+				atomic.AddInt64(&okCount, 1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	return int(okCount), int(failCount), nil
+}
+
 // ResetNegativeStock sets all stock levels below zero back to zero.
 // It fetches all inventory levels once and dispatches up to c.workers concurrent corrections.
 // Returns (successful, failed) counts.

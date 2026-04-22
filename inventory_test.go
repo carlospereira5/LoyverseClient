@@ -319,3 +319,104 @@ func TestResetNegativeStock(t *testing.T) {
 		}
 	}
 }
+
+func TestResetCategoryStock(t *testing.T) {
+	const catID = "cat-1"
+	items := []loyverse.Item{
+		{
+			ID:         "item-1",
+			CategoryID: catID,
+			Variants:   []loyverse.Variant{{ID: "var-cat-1", ItemID: "item-1"}, {ID: "var-cat-2", ItemID: "item-1"}},
+		},
+		{
+			ID:         "item-2",
+			CategoryID: "cat-other",
+			Variants:   []loyverse.Variant{{ID: "var-other", ItemID: "item-2"}},
+		},
+	}
+	levels := []loyverse.InventoryLevel{
+		{VariantID: "var-cat-1", StoreID: "store-1", InStock: 15},
+		{VariantID: "var-cat-2", StoreID: "store-1", InStock: 8},
+		{VariantID: "var-other", StoreID: "store-1", InStock: 5},
+	}
+
+	var mu sync.Mutex
+	var resetVariants []string
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /items", func(w http.ResponseWriter, r *http.Request) {
+		mustWriteJSON(t, w, map[string]any{"items": items, "cursor": ""})
+	})
+	mux.HandleFunc("GET /inventory", func(w http.ResponseWriter, r *http.Request) {
+		mustWriteJSON(t, w, map[string]any{"inventory_levels": levels, "cursor": ""})
+	})
+	mux.HandleFunc("POST /inventory", func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Errorf("POST /inventory: decode body: %v", err)
+		}
+		lvls := body["inventory_levels"].([]any)
+		for _, l := range lvls {
+			entry := l.(map[string]any)
+			mu.Lock()
+			resetVariants = append(resetVariants, entry["variant_id"].(string))
+			mu.Unlock()
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+	c := newTestClient(t, mux)
+
+	ok, failed, err := c.ResetCategoryStock(context.Background(), catID)
+	if err != nil {
+		t.Fatalf("ResetCategoryStock() error = %v", err)
+	}
+	if failed != 0 {
+		t.Errorf("ResetCategoryStock() failed = %d, want 0", failed)
+	}
+	if ok != 2 {
+		t.Errorf("ResetCategoryStock() ok = %d, want 2", ok)
+	}
+
+	sort.Strings(resetVariants)
+	want := []string{"var-cat-1", "var-cat-2"}
+	for i, v := range want {
+		if resetVariants[i] != v {
+			t.Errorf("ResetCategoryStock() reset variants[%d] = %q, want %q", i, resetVariants[i], v)
+		}
+	}
+	for _, v := range resetVariants {
+		if v == "var-other" {
+			t.Error("ResetCategoryStock() reset a variant outside the target category")
+		}
+	}
+}
+
+func TestResetCategoryStock_noCategoryItems(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /items", func(w http.ResponseWriter, r *http.Request) {
+		mustWriteJSON(t, w, map[string]any{"items": []any{}, "cursor": ""})
+	})
+	c := newTestClient(t, mux)
+
+	ok, failed, err := c.ResetCategoryStock(context.Background(), "cat-empty")
+	if err != nil {
+		t.Fatalf("ResetCategoryStock() error = %v, want nil", err)
+	}
+	if ok != 0 || failed != 0 {
+		t.Errorf("ResetCategoryStock() = (%d, %d), want (0, 0)", ok, failed)
+	}
+}
+
+func TestResetCategoryStock_apiError(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /items", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		mustWriteJSON(t, w, map[string]any{"code": "ERR", "message": "server error"})
+	})
+	c := newTestClient(t, mux)
+
+	_, _, err := c.ResetCategoryStock(context.Background(), "cat-1")
+	if err == nil {
+		t.Fatal("ResetCategoryStock() error = nil, want non-nil on API error")
+	}
+}
